@@ -7,8 +7,16 @@ import sympy as sp
 class MatrixModule:
     @staticmethod
     def printMatrix(matrix):
+        widths = [
+            max(len(str(row[j])) for row in matrix)
+            for j in range(len(matrix[0]))
+        ]
+
         for row in matrix:
-            print(" ".join(str(element) for element in row))
+            print("  ".join(
+                str(element).rjust(widths[j])
+                for j, element in enumerate(row)
+            ))
 
         print()
 
