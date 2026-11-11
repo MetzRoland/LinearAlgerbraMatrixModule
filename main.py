@@ -1,8 +1,5 @@
 import copy
 from fractions import Fraction
-from pprint import pprint
-import numpy as np
-import sympy as sp
 
 class MatrixModule:
     @staticmethod
@@ -62,10 +59,8 @@ class MatrixModule:
 
     @classmethod
     def moveAllZeroRowsToBottom(cls, matrix):
-        isAllZeros = False
         currentRowZeroCount = 0
-        swapFromIndex = 0
-        swapWithIndex = 0
+        k = 0
 
         for row in range(len(matrix)):
             currentRowZeroCount = 0
@@ -74,22 +69,11 @@ class MatrixModule:
                 if matrix[row][col] == 0:
                     currentRowZeroCount += 1
 
-            if currentRowZeroCount == len(matrix[0]):
-                if not isAllZeros:
-                    swapFromIndex = row
-
-                isAllZeros = True
-                swapFromIndex = row
-
-                #print(f"All zero row: {row}")
-            elif isAllZeros:
-                swapWithIndex = row
-
-                cls.swapRow(matrix, swapFromIndex, swapWithIndex)
-
-                swapFromIndex += 1
-
-        matrix.sort(key = lambda row: all(x == 0 for x  in row))
+            if currentRowZeroCount != len(matrix[0]):
+                cls.swapRow(matrix, row, k)
+                k += 1
+            else:
+                matrix[k] = matrix[row]
 
     @classmethod
     def rowEchelonForm(cls, matrix):
@@ -129,6 +113,60 @@ class MatrixModule:
         
         cls.setCorrectLeadingElementsRows(matrix_copy)
         
+        return matrix_copy
+
+    @classmethod
+    def reducedRowEchelonForm(cls, matrix):
+        matrix_copy = copy.deepcopy(cls.rowEchelonForm(matrix))
+
+        #MatrixModule.printMatrix(matrix_copy)
+        
+        currentLeadingElementRowIndex = 0
+        currentLeadingElementColIndex = 0
+
+        for row in range(len(matrix)):
+            if currentLeadingElementColIndex >= len(matrix_copy[0]):
+                break
+            
+            currentLeadingElementValue = Fraction(
+                matrix_copy[currentLeadingElementRowIndex][currentLeadingElementColIndex]
+            ).limit_denominator()
+
+            if currentLeadingElementValue == 0:
+                break
+
+            for col in range(currentLeadingElementColIndex, len(matrix_copy[0])):
+                matrix_copy[row][col] = Fraction(matrix_copy[row][col]) / currentLeadingElementValue
+
+            currentLeadingElementRowIndex += 1
+            currentLeadingElementColIndex += 1
+
+        currentLeadingElementRowIndex = len(matrix_copy) - 1
+
+        for row in range(len(matrix_copy) - 2, -1, -1):
+            currentLeadingElementColIndex = 0
+
+            while currentLeadingElementColIndex < len(matrix_copy[0]) and matrix_copy[currentLeadingElementRowIndex][currentLeadingElementColIndex] == 0:
+                currentLeadingElementColIndex += 1
+
+            if currentLeadingElementColIndex < 0:
+                break
+
+            for currentRow in range(row, -1, -1):
+                if currentLeadingElementColIndex >= len(matrix_copy[0]):
+                    continue
+
+                multiplyByLeadingRow = -matrix_copy[currentRow][currentLeadingElementColIndex]
+
+                for currentCol in range(len(matrix_copy[0])):
+                    matrix_copy[currentRow][currentCol] += (
+                        multiplyByLeadingRow
+                        * matrix_copy[currentLeadingElementRowIndex][currentCol]
+                    )
+
+            currentLeadingElementRowIndex -= 1
+            currentLeadingElementColIndex -= 1
+
         return matrix_copy
 
 matrix = [
@@ -187,24 +225,27 @@ A7 = [
 ]
 
 A8 = [
-    [2, 1, 3, 4],
-    [1, 2, 1, 3],
-    [3, 1, 2, 5],
-    [1, 1, 1, 2]
+    [2, 1, 3, 4, 7],
+    [1, 2, 1, 3, 89],
+    [3, 1, 2, 5, 7],
+    [1, 1, 1, 2, 1]
 ]
 
-A8sp = sp.Matrix([
-    [2, 1, 3, 4],
-    [1, 2, 1, 3],
-    [3, 1, 2, 5],
-    [1, 1, 1, 2]
-])
-
-MatrixModule.printMatrix(MatrixModule.rowEchelonForm(A7))
+"""MatrixModule.printMatrix(MatrixModule.rowEchelonForm(A7))
 
 MatrixModule.setCorrectLeadingElementsRows(A6)
 MatrixModule.printMatrix(A6)
 
 MatrixModule.printMatrix(MatrixModule.rowEchelonForm(A8))
 
-print(A8sp.echelon_form())
+print(A8sp.echelon_form())"""
+
+print(MatrixModule.printMatrix(MatrixModule.rowEchelonForm(A8)))
+MatrixModule.printMatrix(MatrixModule.reducedRowEchelonForm(A8))
+MatrixModule.printMatrix(MatrixModule.reducedRowEchelonForm(A7))
+MatrixModule.printMatrix(MatrixModule.reducedRowEchelonForm(A6))
+MatrixModule.printMatrix(MatrixModule.reducedRowEchelonForm(A5))
+MatrixModule.printMatrix(MatrixModule.reducedRowEchelonForm(A4))
+MatrixModule.printMatrix(MatrixModule.reducedRowEchelonForm(A3))
+MatrixModule.printMatrix(MatrixModule.reducedRowEchelonForm(A2))
+MatrixModule.printMatrix(MatrixModule.reducedRowEchelonForm(A1))
